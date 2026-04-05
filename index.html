@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arena Showdown — Online Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:#06060a; --bg2:#0e0e14; --bg3:#161620; --border:#23232f;
+            --accent:#ff4e00; --accent2:#ffd200; --blue:#3b82f6; --green:#22d55c;
+            --text:#f0f0f5; --muted:#555570; --muted2:#303045;
+            --fd:'Bebas Neue',sans-serif; --fb:'Syne',sans-serif; --fm:'JetBrains Mono',monospace;
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:var(--bg);color:var(--text);font-family:var(--fb);height:100vh;overflow:hidden}
+        body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 4px);pointer-events:none;z-index:9999}
+
+        /* CONNECT */
+        #sc{display:flex;align-items:center;justify-content:center;height:100vh;background:radial-gradient(ellipse 80% 60% at 50% 40%,#1a0a00,var(--bg) 70%)}
+        .box{background:var(--bg2);border:1px solid var(--border);border-top:3px solid var(--accent);padding:44px 36px;border-radius:20px;width:440px;text-align:center;box-shadow:0 0 80px rgba(255,78,0,.12),0 40px 80px rgba(0,0,0,.6);position:relative}
+        .box::before{content:'';position:absolute;top:-3px;left:30%;right:30%;height:3px;background:var(--accent2);border-radius:0 0 4px 4px}
+        .badge{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--accent),#cc2200);color:#fff;font-family:var(--fd);font-size:11px;letter-spacing:3px;padding:5px 14px;border-radius:4px;margin-bottom:18px}
+        .title{font-family:var(--fd);font-size:54px;letter-spacing:2px;line-height:1;margin-bottom:6px;background:linear-gradient(135deg,#fff,#aaa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .sub{color:var(--muted);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:28px}
+        .room-disp{background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--accent);padding:12px 16px;border-radius:10px;cursor:pointer;transition:all .2s;margin-bottom:16px}
+        .room-disp:hover{border-color:var(--accent);background:#1a0a00}
+        .rl{font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:4px;font-family:var(--fb)}
+        .rv{font-size:22px;color:var(--accent);letter-spacing:6px;font-family:var(--fm);display:flex;align-items:center;justify-content:space-between}
+        .ch{font-size:9px;color:var(--muted);font-family:var(--fb);letter-spacing:0}
+        .divider{display:flex;align-items:center;gap:12px;margin:14px 0}
+        .dl{flex:1;height:1px;background:var(--border)}
+        .dt{font-size:10px;color:var(--muted);letter-spacing:1px}
+        .inp{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 18px;font-family:var(--fm);font-size:20px;color:var(--text);outline:none;text-align:center;text-transform:uppercase;letter-spacing:6px;margin-bottom:12px;transition:all .2s}
+        .inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,78,0,.1)}
+        .inp::placeholder{color:var(--muted);font-size:13px;letter-spacing:2px}
+        .bcn{width:100%;background:linear-gradient(135deg,var(--accent),#cc2200);color:#fff;font-family:var(--fd);font-size:18px;letter-spacing:3px;padding:16px;border:none;border-radius:10px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+        .bcn::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent 60%)}
+        .bcn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(255,78,0,.4)}
+        .bcn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+        #cstatus{margin-top:14px;font-size:11px;color:var(--muted);min-height:18px}
+        #cstatus.ok{color:var(--green)} #cstatus.err{color:#ef4444}
+        .nmode{margin-top:8px;font-size:9px;color:var(--muted2);letter-spacing:1px}
+
+        /* ARENA */
+        #sa{display:none;flex-direction:column;height:100vh;padding:10px;gap:8px}
+        .ah{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;background:var(--bg2);border:1px solid var(--border);padding:10px 18px;border-radius:14px;flex-shrink:0}
+        .hl{display:flex;align-items:center;gap:18px}
+        .hr{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+        .lt{font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:2px}
+        #timer{font-family:var(--fd);font-size:34px;line-height:1;color:var(--accent);letter-spacing:2px;transition:color .3s}
+        #timer.urgent{color:#ff0033;animation:pt .5s infinite alternate}
+        @keyframes pt{from{opacity:1}to{opacity:.4}}
+        .sp{width:1px;height:34px;background:var(--border)}
+        #tema{font-family:var(--fd);font-size:17px;letter-spacing:1px;text-transform:uppercase;max-width:240px;line-height:1.1}
+        .sb{display:flex;align-items:center;gap:12px;background:var(--bg3);padding:8px 20px;border-radius:12px;border:1px solid var(--border)}
+        .sp2{display:flex;flex-direction:column;align-items:center;gap:2px}
+        .sn{font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+        .sc2{font-family:var(--fd);font-size:40px;letter-spacing:1px;line-height:1;min-width:48px;text-align:center}
+        .sc2.m{color:var(--accent)} .sc2.o{color:var(--blue)}
+        .vs{font-family:var(--fd);font-size:14px;color:var(--muted2);letter-spacing:2px;padding-top:16px}
+        .btn{font-family:var(--fd);font-size:14px;letter-spacing:2px;padding:9px 18px;border:none;border-radius:8px;cursor:pointer;transition:all .2s;white-space:nowrap}
+        .bp{background:var(--accent);color:#fff}.bp:hover{background:#ff6633;transform:translateY(-1px);box-shadow:0 4px 20px rgba(255,78,0,.4)}
+        .bb{background:var(--blue);color:#fff}.bb:hover{background:#5b9cf6;transform:translateY(-1px)}
+        .bg{background:var(--bg3);color:var(--text);border:1px solid var(--border)}.bg:hover{border-color:var(--muted)}
+        .am{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;min-height:0}
+        .pp{display:flex;flex-direction:column;gap:6px;min-height:0}
+        .pl{font-size:8px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;padding:0 4px;display:flex;align-items:center;gap:8px}
+        .pl::after{content:'';flex:1;height:1px;background:var(--border)}
+        .ew{flex:1.3;display:flex;flex-direction:column;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+        .ew:focus-within{border-color:rgba(255,78,0,.3)}
+        .eb{background:var(--bg3);padding:7px 14px;display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--border);flex-shrink:0}
+        .dot{width:8px;height:8px;border-radius:50%}
+        .dr{background:#ff5f57}.dy{background:#febc2e}.dg{background:#28c840}
+        .ef{display:flex;flex-direction:column;height:100%;background:#090910}
+        #editor{flex:1;background:transparent;color:#e8e8ff;font-family:var(--fm);font-size:11px;line-height:1.7;border:none;outline:none;resize:none;padding:12px;tab-size:2}
+        #editor::selection{background:rgba(255,78,0,.3)}
+        .cc{padding:4px 14px;font-family:var(--fm);font-size:9px;color:var(--muted);background:var(--bg3);border-top:1px solid var(--border);display:flex;justify-content:space-between}
+        .pw{flex:1;min-height:0;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+        iframe{width:100%;height:100%;border:none;background:#fff;display:block}
+        .op{position:relative}
+        #bo{position:absolute;inset:0;background:var(--bg);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;border:1px solid var(--border);border-radius:12px}
+        .bi{font-size:44px;opacity:.1}
+        .bt2{font-family:var(--fd);font-size:18px;letter-spacing:4px;color:var(--muted2);text-transform:uppercase}
+        .bds{display:flex;gap:6px}
+        .bd{width:6px;height:6px;border-radius:50%;background:var(--muted2);animation:bl 1.4s infinite}
+        .bd:nth-child(2){animation-delay:.2s}.bd:nth-child(3){animation-delay:.4s}
+        @keyframes bl{0%,100%{opacity:.2}50%{opacity:1}}
+        #ra{display:none;flex-direction:column;gap:6px;min-height:0;flex:1}
+        .tb{display:flex;gap:2px;background:var(--bg3);padding:4px;border-radius:8px}
+        .tab{flex:1;font-family:var(--fb);font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:6px;border-radius:6px;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all .2s}
+        .tab.active{background:var(--bg2);color:var(--text);border:1px solid var(--border)}
+        .cr{background:#05050d;border:1px solid var(--border);border-radius:12px;overflow:auto;padding:14px;flex:1}
+        #ocr{font-family:var(--fm);font-size:10px;color:#22d55c;line-height:1.7;white-space:pre-wrap;word-break:break-all}
+
+        /* JUDGE */
+        #jp{display:none;position:fixed;bottom:0;left:0;right:0;background:linear-gradient(180deg,rgba(6,6,10,0),var(--bg) 30px);padding:40px 20px 16px;z-index:200}
+        .jc{max-width:780px;margin:0 auto;background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 -20px 80px rgba(0,0,0,.8),0 0 0 1px rgba(255,78,0,.1);animation:su .4s cubic-bezier(.16,1,.3,1)}
+        @keyframes su{from{transform:translateY(100px);opacity:0}to{transform:translateY(0);opacity:1}}
+        .jh{padding:12px 20px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+        .jt{font-family:var(--fd);font-size:19px;letter-spacing:3px;color:var(--blue);text-transform:uppercase}
+        #wt{font-family:var(--fd);font-size:13px;letter-spacing:2px;padding:5px 14px;border-radius:6px;background:var(--accent);color:#fff}
+        #wt.won{background:var(--green);color:#000} #wt.lost{background:#ef4444;color:#fff} #wt.tie{background:var(--accent2);color:#000}
+        .jb{padding:16px 20px}
+        .gg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+        .gc{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px 16px}
+        .gla{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+        .gn{font-family:var(--fd);font-size:44px;line-height:1}
+        .gn.m{color:var(--accent)}.gn.o{color:var(--blue)}
+        .gb{height:4px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden}
+        .gf{height:100%;border-radius:2px;transition:width 1s cubic-bezier(.16,1,.3,1)}
+        .gf.m{background:var(--accent)}.gf.o{background:var(--blue)}
+        .ctrow{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+        .ct{font-size:10px;font-family:var(--fm);padding:3px 10px;border-radius:4px;border:1px solid var(--border);color:var(--muted)}
+        .ct.win{border-color:var(--green);color:var(--green)}.ct.lose{border-color:#ef4444;color:#ef4444}
+        #jcm{font-size:12px;color:var(--muted);line-height:1.7;padding:10px 14px;background:var(--bg);border-radius:8px;border-left:3px solid var(--border);font-style:italic}
+
+        /* AI */
+        #al{display:none;position:fixed;inset:0;background:rgba(6,6,10,.85);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:18px;backdrop-filter:blur(4px)}
+        .as{width:56px;height:56px;border-radius:50%;border:2px solid var(--border);border-top-color:var(--accent);animation:spin .8s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .at{font-family:var(--fd);font-size:22px;letter-spacing:4px;color:var(--muted);text-transform:uppercase}
+        #att{font-family:var(--fm);font-size:11px;color:var(--accent);max-width:360px;text-align:center;line-height:1.8;opacity:.7}
+
+        /* NOTIF */
+        #notif{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border);padding:9px 20px;border-radius:8px;font-size:12px;color:var(--text);z-index:500;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+        #notif.show{opacity:1}
+
+        /* HISTORY */
+        #rh{display:none;position:fixed;right:10px;top:76px;width:165px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px;z-index:50}
+        .htitle{font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+        .hi{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-radius:6px;background:var(--bg3);margin-bottom:4px;font-size:10px}
+        .hr2{color:var(--muted);font-family:var(--fm)}
+        .hres{font-family:var(--fd);font-size:12px;letter-spacing:1px}
+        .hres.w{color:var(--green)}.hres.l{color:#ef4444}.hres.d{color:var(--accent2)}
+
+        .live{display:inline-flex;align-items:center;gap:5px;font-size:9px;letter-spacing:1px;color:var(--green);text-transform:uppercase}
+        .live::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:plive 1s infinite}
+        .wait{display:inline-flex;align-items:center;gap:5px;font-size:9px;letter-spacing:1px;color:var(--accent2);text-transform:uppercase}
+        .wait::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent2);animation:plive 1s infinite}
+        @keyframes plive{0%,100%{box-shadow:0 0 0 0 rgba(34,213,92,.5)}50%{box-shadow:0 0 0 5px rgba(34,213,92,0)}}
+        .hidden{display:none!important}
+    </style>
+</head>
+<body>
+
+<!-- CONNECT -->
+<div id="sc">
+    <div class="box">
+        <div class="badge">⚔ ARENA SHOWDOWN</div>
+        <h1 class="title">CODE<br>DUEL</h1>
+        <p class="sub">Online Edition · P2P WebRTC</p>
+
+        <div class="room-disp" onclick="copiarSala()">
+            <div class="rl">Seu Código de Sala</div>
+            <div class="rv">
+                <span id="mycode">----</span>
+                <span class="ch">📋 copiar</span>
+            </div>
+        </div>
+
+        <div class="divider"><div class="dl"></div><div class="dt">ENTRAR NA SALA DO ADVERSÁRIO</div><div class="dl"></div></div>
+
+        <input id="rinput" class="inp" type="text" maxlength="4" placeholder="XXXX" autocomplete="off" spellcheck="false">
+        <button id="bentrar" class="bcn" onclick="entrarNaSala()">ENTRAR NA ARENA</button>
+        <div id="cstatus">Conectando ao servidor...</div>
+        <div class="nmode" id="nmode">🌐 WebRTC P2P — Jogue online com qualquer pessoa!</div>
+    </div>
+</div>
+
+<!-- ARENA -->
+<div id="sa">
+    <header class="ah">
+        <div class="hl">
+            <div><div class="lt">Tempo</div><div id="timer">05:00</div></div>
+            <div class="sp"></div>
+            <div><div class="lt">Desafio do Round</div><div id="tema">---</div></div>
+            <div class="sp"></div>
+            <div id="stind" class="wait">aguardando</div>
+        </div>
+        <div class="sb">
+            <div class="sp2"><div class="sn">Você</div><div id="msc" class="sc2 m">0</div></div>
+            <div class="vs">VS</div>
+            <div class="sp2"><div class="sn">Adversário</div><div id="osc" class="sc2 o">0</div></div>
+        </div>
+        <div class="hr">
+            <span id="rnum" style="font-size:10px;color:var(--muted);font-family:var(--fm);margin-right:6px">Round #1</span>
+            <button id="bfin" class="btn bp" onclick="finalizarDuelo()">ENTREGAR</button>
+            <button id="bjudge" class="btn bb hidden" onclick="gerarVeredito()">⚖ JULGAR</button>
+            <button id="breset" class="btn bg hidden" onclick="resetarJogo(true)">PRÓXIMO →</button>
+        </div>
+    </header>
+
+    <main class="am" style="flex:1;min-height:0">
+        <div class="pp">
+            <div class="pl">Seu Editor</div>
+            <div class="ew">
+                <div class="ef">
+                    <div class="eb"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><span style="font-family:var(--fm);font-size:10px;color:var(--muted);margin-left:4px">index.html</span></div>
+                    <textarea id="editor" spellcheck="false"></textarea>
+                    <div class="cc"><span id="ccount">0 chars</span><span id="lcount">0 linhas</span></div>
+                </div>
+            </div>
+            <div class="pw"><iframe id="myp"></iframe></div>
+        </div>
+
+        <div class="pp op">
+            <div class="pl">Adversário</div>
+            <div id="bo">
+                <div class="bi">🔒</div>
+                <div class="bt2">Adversário codando</div>
+                <div class="bds"><div class="bd"></div><div class="bd"></div><div class="bd"></div></div>
+            </div>
+            <div id="ra">
+                <div class="tb">
+                    <button class="tab active" onclick="switchTab('preview')">👁 Preview</button>
+                    <button class="tab" onclick="switchTab('code')">💻 Código</button>
+                </div>
+                <div id="tprev" class="pw" style="flex:1"><iframe id="oprev"></iframe></div>
+                <div id="tcode" class="cr hidden"><pre id="ocr"></pre></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- HISTORY -->
+<div id="rh"><div class="htitle">Histórico</div><div id="hlist"></div></div>
+
+<!-- AI LOADING -->
+<div id="al">
+    <div class="as"></div>
+    <div class="at">IA Julgando</div>
+    <div id="att">Analisando código dos combatentes...</div>
+</div>
+
+<!-- JUDGE PANEL -->
+<div id="jp">
+    <div class="jc">
+        <div class="jh"><div class="jt">⚔ Resultado do Round</div><div id="wt">---</div></div>
+        <div class="jb">
+            <div class="gg">
+                <div class="gc"><div class="gla">Sua Nota</div><div id="mgr" class="gn m">0.0</div><div class="gb"><div id="mgb" class="gf m" style="width:0%"></div></div></div>
+                <div class="gc"><div class="gla">Nota Adversário</div><div id="ogr" class="gn o">0.0</div><div class="gb"><div id="ogb" class="gf o" style="width:0%"></div></div></div>
+            </div>
+            <div class="ctrow" id="ctrow"></div>
+            <div id="jcm"></div>
+        </div>
+    </div>
+</div>
+
+<!-- NOTIF -->
+<div id="notif"></div>
+
+<script src="https://api.anthropic.com/v1/client.js"></script>
+<script>
+const TEMAS = ["Card de Perfil Gamer","Dashboard de Cripto","Login Dark Futurista","Menu de Restaurante Chic","Widget de Música Neon","Landing Page de Startup","Painel de Métricas SaaS","Portfolio de Designer","App de Clima Minimalista","Hero Section de E-commerce","Calculadora Estilizada","Navbar Interativa Animada","Rodapé de Site Criativo","Botões Únicos com Efeitos","Tela de Loading Criativa"];
+
+const INIT = `<!DOCTYPE html>
+<html lang="pt-br">
+<head><meta charset="UTF-8"><style>
+  body{font-family:sans-serif;background:#f5f5f5;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+  .card{background:#fff;padding:32px;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.1);text-align:center}
+  h1{font-size:24px;margin-bottom:8px} p{color:#888}
+</style></head>
+<body><div class="card"><h1>🚀 Hora de codar!</h1><p>Construa algo incrível em 5 minutos.</p></div></body>
+</html>`;
+
+// --- STATE ---
+let myCode = INIT;
+let oppCode = "";
+let iAmReady = false;
+let opponentReady = false;
+let myWins = 0;
+let oppWins = 0;
+let roundNum = 1;
+let roundHistory = [];
+let currentTema = "";
+let timeLeft = 300;
+let timerInt = null;
+let myRole = null; // 'host' or 'guest'
+let myRoom = "";
+let ws = null; // WebSocket connection
+let peerConnection = null; // WebRTC connection
+let dataChannel = nu
