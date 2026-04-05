@@ -1,0 +1,28 @@
+{
+  "name": "arena-showdown-online",
+  "version": "1.0.0",
+  "description": "Arena de código online com WebRTC P2P",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "webrtc",
+    "p2p",
+    "code",
+    "arena",
+    "game"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
